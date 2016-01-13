@@ -171,201 +171,223 @@ void loop()
 {
   if (Serial.available() > 0)
   {
-    // read the protocol type:
-    String irprot_str = Serial.readStringUntil(' ');
     // read the data:
-    String irdata_str = Serial.readStringUntil('\n');
+    String cmd_str = Serial.readStringUntil('\n');
 
-    unsigned long data = 0;
-    int nbits = 0;
-    int device = -1;
-    int subdevice = -1;
-    int function = -1;
-    bool irresult = true;
+    //remove invalid symbols before command
+    int i;
+    for (i = 0; i < cmd_str.length(); i++)
+    {
+      if (cmd_str[i] >= 'A' && cmd_str[i] <= 'Z')
+      {
+        break;
+      }
+    }
+    cmd_str.remove(0, i);
+    cmd_str.trim();
+    if (cmd_str.length() != 0)
+    {
+      i = cmd_str.indexOf(' ');
+      if (i == -1)
+      {
+        i = cmd_str.length();
+      }
+      // protocol type:
+      String irprot_str = cmd_str.substring(0, i);
+      // command data:
+      String irdata_str = cmd_str.substring(i, cmd_str.length());
 
-    irprot_str.trim();
-    irdata_str.trim();
-    Serial.print(F("Req: "));
-    Serial.print(irprot_str);
-    Serial.print(F(" "));
-
-    if (irprot_str == "PRONTO")
-    {
-      Serial.println(irdata_str);
-      irresult = irsend.sendPronto(irdata_str.c_str(), PRONTO_ONCE, PRONTO_FALLBACK);
-    }
-    
-    else if (irprot_str == "PRONTO-REPEAT")
-    {
-      Serial.println(irdata_str);
-      irresult = irsend.sendPronto(irdata_str.c_str(), PRONTO_REPEAT, PRONTO_FALLBACK);
-    }
-    
-    else if (irprot_str == "LG-RAW")
-    {
-      if (parse_data_nbits(irdata_str, data, nbits, irresult))
-      {
-        irsend.sendLG(data, nbits);
-      }
-    }
-    
-    else if (irprot_str == "LG")
-    {
-      if (parse_device_subdevice_function(irdata_str, device, subdevice, function, irresult))
-      {
-        if (subdevice < 0)
-        {
-          subdevice = ~device;
-        }
-        data = 0;
-        data |= ((unsigned long)(device & 0xFF)) << 0;
-        data |= ((unsigned long)(subdevice & 0xFF)) << 8;
-        data |= ((unsigned long)(function & 0xFF)) << 16;
-        data |= ((unsigned long)(~function & 0xFF)) << 24;
-        irsend.sendLG(revbits(data), 32);
-      }
-    }
-    
-    else if (irprot_str == "RC5-RAW")
-    {
-      if (parse_data_nbits(irdata_str, data, nbits, irresult))
-      {
-        irsend.sendRC5(data, nbits);
-      }
-    }
-    
-    else if (irprot_str == "RC6-RAW")
-    {
-      if (parse_data_nbits(irdata_str, data, nbits, irresult))
-      {
-        irsend.sendRC6(data, nbits);
-      }
-    }
-    
-    else if (irprot_str == "NEC-RAW")
-    {
-      if (parse_data_nbits(irdata_str, data, nbits, irresult))
-      {
-        irsend.sendNEC(data, nbits);
-      }
-    }
-    
-    else if (irprot_str == "NEC")
-    {
-      if (parse_device_subdevice_function(irdata_str, device, subdevice, function, irresult))
-      {
-        if (subdevice < 0)
-        {
-          subdevice = ~device;
-        }
-        data = 0;
-        data |= ((unsigned long)(device & 0xFF)) << 0;
-        data |= ((unsigned long)(subdevice & 0xFF)) << 8;
-        data |= ((unsigned long)(function & 0xFF)) << 16;
-        data |= ((unsigned long)(~function & 0xFF)) << 24;
-        irsend.sendNEC(revbits(data), 32);
-      }
-    }
-    
-    else if (irprot_str == "SONY-RAW")
-    {
-      if (parse_data_nbits(irdata_str, data, nbits, irresult))
-      {
-        irsend.sendSony(data, nbits);
-      }
-    }
-    
-    else if (irprot_str == "PANASONIC-RAW")
-    {
       unsigned long data = 0;
       int nbits = 0;
-      if (parse_data_nbits(irdata_str, data, nbits, irresult))
-      {
-        irsend.sendPanasonic(data, nbits);
-      }
-    }
-    
-    else if (irprot_str == "JVC-RAW")
-    {
-      bool repeat = false;
-      if (parse_data_nbits_repeat(irdata_str, data, nbits, repeat, irresult))
-      {
-        irsend.sendJVC(data, nbits, repeat);
-      }
-    }
-    
-    else if (irprot_str == "SAMSUNG-RAW")
-    {
-      if (parse_data_nbits(irdata_str, data, nbits, irresult))
-      {
-        irsend.sendSAMSUNG(data, nbits);
-      }
-    }
-    
-    else if (irprot_str == "WHYNTER-RAW")
-    {
-      if (parse_data_nbits(irdata_str, data, nbits, irresult))
-      {
-        irsend.sendWhynter(data, nbits);
-      }
-    }
-    
-    else if (irprot_str == "AIWARCT501")
-    {
-      int code = 0;
-      if (parse_code(irdata_str, code, irresult))
-      {
-        irsend.sendAiwaRCT501(code);
-      }
-    }
-    
-    else if (irprot_str == "DISH-RAW")
-    {
-      if (parse_data_nbits(irdata_str, data, nbits, irresult))
-      {
-        irsend.sendDISH(data, nbits);
-      }
-    }
-    
-    else if (irprot_str == "SHARP-RAW")
-    {
-      if (parse_data_nbits(irdata_str, data, nbits, irresult))
-      {
-        irsend.sendSharpRaw(data, nbits);
-      }
-    }
-    
-    else if (irprot_str == "SHARP")
-    {
-      unsigned int address = 0;
-      unsigned int command = 0;
-      if (parse_address_command(irdata_str, address, command, irresult))
-      {
-        irsend.sendSharp(address, command);
-      }
-    }
-    
-    else if (irprot_str == "DENON-RAW")
-    {
-      if (parse_data_nbits(irdata_str, data, nbits, irresult))
-      {
-        irsend.sendDenon(data, nbits);
-      }
-    }
-    
-    else
-    {
-      Serial.println(F("ERROR: Unknown IR protocol requested"));
-      irresult = false;
-    }
+      int device = -1;
+      int subdevice = -1;
+      int function = -1;
+      bool irresult = true;
 
-    if (irresult)
-    {
-      Serial.println(F("Res: OK"));
-    }
-    else
-    {
-      Serial.println(F("Res: ERROR"));
+      irprot_str.trim();
+      irdata_str.trim();
+      Serial.print(F("Req: "));
+      Serial.print(irprot_str);
+      Serial.print(F(" "));
+
+      if (irprot_str == "PRONTO")
+      {
+        Serial.println(irdata_str);
+        irresult = irsend.sendPronto(irdata_str.c_str(), PRONTO_ONCE, PRONTO_FALLBACK);
+      }
+
+      else if (irprot_str == "PRONTO-REPEAT")
+      {
+        Serial.println(irdata_str);
+        irresult = irsend.sendPronto(irdata_str.c_str(), PRONTO_REPEAT, PRONTO_FALLBACK);
+      }
+
+      else if (irprot_str == "LG-RAW")
+      {
+        if (parse_data_nbits(irdata_str, data, nbits, irresult))
+        {
+          irsend.sendLG(data, nbits);
+        }
+      }
+
+      else if (irprot_str == "LG")
+      {
+        if (parse_device_subdevice_function(irdata_str, device, subdevice, function, irresult))
+        {
+          if (subdevice < 0)
+          {
+            subdevice = ~device;
+          }
+          data = 0;
+          data |= ((unsigned long)(device & 0xFF)) << 0;
+          data |= ((unsigned long)(subdevice & 0xFF)) << 8;
+          data |= ((unsigned long)(function & 0xFF)) << 16;
+          data |= ((unsigned long)(~function & 0xFF)) << 24;
+          irsend.sendLG(revbits(data), 32);
+        }
+      }
+
+      else if (irprot_str == "RC5-RAW")
+      {
+        if (parse_data_nbits(irdata_str, data, nbits, irresult))
+        {
+          irsend.sendRC5(data, nbits);
+        }
+      }
+
+      else if (irprot_str == "RC6-RAW")
+      {
+        if (parse_data_nbits(irdata_str, data, nbits, irresult))
+        {
+          irsend.sendRC6(data, nbits);
+        }
+      }
+
+      else if (irprot_str == "NEC-RAW")
+      {
+        if (parse_data_nbits(irdata_str, data, nbits, irresult))
+        {
+          irsend.sendNEC(data, nbits);
+        }
+      }
+
+      else if (irprot_str == "NEC")
+      {
+        if (parse_device_subdevice_function(irdata_str, device, subdevice, function, irresult))
+        {
+          if (subdevice < 0)
+          {
+            subdevice = ~device;
+          }
+          data = 0;
+          data |= ((unsigned long)(device & 0xFF)) << 0;
+          data |= ((unsigned long)(subdevice & 0xFF)) << 8;
+          data |= ((unsigned long)(function & 0xFF)) << 16;
+          data |= ((unsigned long)(~function & 0xFF)) << 24;
+          irsend.sendNEC(revbits(data), 32);
+        }
+      }
+
+      else if (irprot_str == "SONY-RAW")
+      {
+        if (parse_data_nbits(irdata_str, data, nbits, irresult))
+        {
+          irsend.sendSony(data, nbits);
+        }
+      }
+
+      else if (irprot_str == "PANASONIC-RAW")
+      {
+        unsigned long data = 0;
+        int nbits = 0;
+        if (parse_data_nbits(irdata_str, data, nbits, irresult))
+        {
+          irsend.sendPanasonic(data, nbits);
+        }
+      }
+
+      else if (irprot_str == "JVC-RAW")
+      {
+        bool repeat = false;
+        if (parse_data_nbits_repeat(irdata_str, data, nbits, repeat, irresult))
+        {
+          irsend.sendJVC(data, nbits, repeat);
+        }
+      }
+
+      else if (irprot_str == "SAMSUNG-RAW")
+      {
+        if (parse_data_nbits(irdata_str, data, nbits, irresult))
+        {
+          irsend.sendSAMSUNG(data, nbits);
+        }
+      }
+
+      else if (irprot_str == "WHYNTER-RAW")
+      {
+        if (parse_data_nbits(irdata_str, data, nbits, irresult))
+        {
+          irsend.sendWhynter(data, nbits);
+        }
+      }
+
+      else if (irprot_str == "AIWARCT501")
+      {
+        int code = 0;
+        if (parse_code(irdata_str, code, irresult))
+        {
+          irsend.sendAiwaRCT501(code);
+        }
+      }
+
+      else if (irprot_str == "DISH-RAW")
+      {
+        if (parse_data_nbits(irdata_str, data, nbits, irresult))
+        {
+          irsend.sendDISH(data, nbits);
+        }
+      }
+
+      else if (irprot_str == "SHARP-RAW")
+      {
+        if (parse_data_nbits(irdata_str, data, nbits, irresult))
+        {
+          irsend.sendSharpRaw(data, nbits);
+        }
+      }
+
+      else if (irprot_str == "SHARP")
+      {
+        unsigned int address = 0;
+        unsigned int command = 0;
+        if (parse_address_command(irdata_str, address, command, irresult))
+        {
+          irsend.sendSharp(address, command);
+        }
+      }
+
+      else if (irprot_str == "DENON-RAW")
+      {
+        if (parse_data_nbits(irdata_str, data, nbits, irresult))
+        {
+          irsend.sendDenon(data, nbits);
+        }
+      }
+
+      else
+      {
+        Serial.println(F("ERROR: Unknown IR protocol requested"));
+        irresult = false;
+      }
+
+      if (irresult)
+      {
+        Serial.println(F("Res: OK"));
+      }
+      else
+      {
+        Serial.println(F("Res: ERROR"));
+      }
     }
   }
 }

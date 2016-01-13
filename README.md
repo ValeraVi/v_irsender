@@ -9,6 +9,14 @@ IR codes can be found at:
 
 ## Version 1.0
 
+## Installation
+- Flash one of .hex files to Arduino Uno.
+Or:
+- Install Arduino Software.
+- Install IRremote Arduino library: https://github.com/z3t0/Arduino-IRremote
+- Apply patch to IRremote Arduino library, if not merged: https://github.com/z3t0/Arduino-IRremote/pull/253/files
+- open .ino file and "upload" it to Arduino Uno.
+
 ## Usage
 - Check the source code for supported IR protocols and its parameters.
 
