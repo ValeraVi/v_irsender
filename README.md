@@ -11,6 +11,7 @@ IR codes can be found at:
 
 ## Installation
 - Flash one of .hex files to Arduino Uno.
+
 Or:
 - Install Arduino Software.
 - Install IRremote Arduino library: https://github.com/z3t0/Arduino-IRremote
