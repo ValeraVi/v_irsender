@@ -22,5 +22,5 @@ Or:
 - Check the source code for supported IR protocols and its parameters.
 
 ## Copyright
-Copyright 2016 Valerii Vyshniak  
+Copyright (c) 2016 valeravi (Valerii Vyshniak)
 http://www.vi-soft.com.ua
